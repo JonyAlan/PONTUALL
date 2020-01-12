@@ -1,0 +1,153 @@
+import React, { Component } from 'react';
+import { Dimensions, Image, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { RNCamera } from 'react-native-camera';
+import firebase from 'firebase'
+// import SmartPhone from './assets/images/smartphone.png';
+
+type Props = {};
+export default class App extends Component<Props> {
+  
+  componentWillMount(){
+    var firebaseConfig = {
+      apiKey: "AIzaSyAd6rFKzQZTwgwQsu-IJj7iEzvPrR7j8Kw",
+      authDomain: "pontuall-3af7a.firebaseapp.com",
+      databaseURL: "https://pontuall-3af7a.firebaseio.com",
+      projectId: "pontuall-3af7a",
+      storageBucket: "pontuall-3af7a.appspot.com",
+      messagingSenderId: "285684794233",
+      appId: "1:285684794233:web:a6e60c67ca13ddf92fa5a8",
+      measurementId: "G-E31RGJE7NJ"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  }
+
+
+  takePicture2 = async () => {
+    if (this.camera) {
+      const options = { quality: 0.5, base64: true };
+      const data = await this.camera.takePictureAsync(options)
+      // alert("Imagem Salva");
+      alert(data.uri);
+      alert(JSON.stringify(this.state.faces));
+    }
+  }
+
+  state = {
+    faces: '' ,
+    fd: true,
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    cont: 0,
+    olhoDx:0,
+    olhoDy:0,
+    olhoEx:0,
+    olhoEy:0,
+
+  }
+  render() {
+    return (
+      <View style={styles.container}>
+        <RNCamera
+          style={styles.camera}
+          ref={ref => { this.camera = ref; }}
+          type={RNCamera.Constants.Type.front}
+          autoFocus={RNCamera.Constants.AutoFocus.on}
+          permissionDialogTitle={'Permission to use camera'}
+          permissionDialogMessage={'We need your permission to use your camera phone'}
+          faceDetectionClassifications={RNCamera.Constants.FaceDetection.Classifications.all}
+          faceDetectionLandmarks={RNCamera.Constants.FaceDetection.Landmarks.all}
+          onFacesDetected={face => {
+            if(this.state.fd) {
+              if(this.state.cont < 50){
+                // alert(JSON.stringify(face.faces[0].bounds));
+                let position  = face.faces[0].bounds.origin;
+                let tamanho  = face.faces[0].bounds.size;
+                let olhoD  = face.faces[0].rightEyePosition;
+                let olhoE  = face.faces[0].leftEyePosition;
+                // alert(JSON.stringify(face));
+                this.setState({fd: true, x: (position.x -30), y: position.y, width: tamanho.width, height: tamanho.height });
+                this.setState({ olhoDx: olhoD.x, olhoDy: olhoD.y });
+                this.setState({ olhoEx: olhoE.x, olhoEy: olhoE.y });
+
+                // this.setState({ cont: (this.state.cont + 1) });
+                
+                // firebase.database().ref(('users/'+this.state.cont)).set(
+                //   {
+                //     dados: face.faces[0]
+                //   }
+                // )
+
+              }
+              // else{
+              //   alert('Cheegaaaaaa...');
+              //   this.setState({width: 0, height: 0, x:0, y:0});
+              // }
+            }
+          }}
+        />
+
+        <View style={styles.cameraElements}>
+          <View style={{ flex: 6 }}/>
+          <View style={{ flex: 4, alignItems: 'center' }}>
+            {/* <Image style={styles.smartphoneImage} source={SmartPhone}/> */}
+            <TouchableOpacity onPress={this.takePicture} style={styles.capture}>
+            <Text style={styles.ex}> Registrar </Text>
+          </TouchableOpacity>
+          </View>
+        </View>
+        <Text style={ {top: this.state.y , left: this.state.x , borderRadius: 5, borderWidth: 8, borderColor: '#0702F7', position: 'absolute',width: this.state.width,
+            height: this.state.height }}></Text>
+        <Text style={ {position: 'absolute', top: this.state.y , left: this.state.x, backgroundColor: '#FFFFFF'}}>{this.state.cont}</Text>
+        <Text style={ {position: 'absolute', top: this.state.olhoDy , left: this.state.olhoDx, backgroundColor: '#FFFFFF'}}>o</Text>
+        <Text style={ {position: 'absolute', top: this.state.olhoEy , left: this.state.olhoEx, backgroundColor: '#FFFFFF'}}>o</Text>
+      </View>
+    );
+  }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
+  },
+  buttonContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF',
+  },
+  camera: {
+    position: 'absolute',
+    flex: 1,
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height
+  },
+  cameraElements: {
+    zIndex: 1,
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 0
+  },
+  capture: {
+    position: 'absolute',
+    top: 140,
+  },
+  ex: {
+    paddingHorizontal: 12,
+    marginVertical: 5,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#f222',
+    fontSize: 24,
+    fontWeight: 'bold',
+    backgroundColor: '#ffffff'
+  },
+});
